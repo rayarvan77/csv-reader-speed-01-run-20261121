@@ -52,9 +52,6 @@ const C_QUOTE = 34;
 /** The next delimiter of an unquoted field: comma, LF or CR. */
 const DELIM = /[,\r\n]/g;
 
-/** A line break inside a quoted field: LF or CR. */
-const NEWLINE = /[\r\n]/g;
-
 /** csv-reader 1.0.0's answer for one case's input. */
 export function run(input) {
   const text = String(input.text);
@@ -80,13 +77,13 @@ export function run(input) {
 
   // Reads the run text[a, b) of a quoted field, turning each CRLF and each
   // lone CR into one LF and counting every line break it holds. The common
-  // run holds no line break at all and is one slice; one scan looks for
-  // either break, instead of one scan per kind.
+  // run holds no line break at all and is one slice.
   function convert(a, b) {
-    NEWLINE.lastIndex = a;
-    const m = NEWLINE.exec(text);
-    if (m === null || m.index >= b) return text.slice(a, b);
-    return convertSlow(a, b);
+    const nl = text.indexOf("\n", a);
+    if (nl !== -1 && nl < b) return convertSlow(a, b);
+    const cr = text.indexOf("\r", a);
+    if (cr !== -1 && cr < b) return convertSlow(a, b);
+    return text.slice(a, b);
   }
 
   function convertSlow(a, b) {
